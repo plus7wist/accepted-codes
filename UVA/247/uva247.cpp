@@ -10,7 +10,7 @@ void floyd()
     for(int k=0;k<n;k++)
         for(int i=0;i<n;i++)
             for(int j=0;j<n;j++)
-                d[i][j]=(d[i][j]|(d[i][k]&&d[k][j]));
+                d[i][j]=(d[i][j]||(d[i][k]&&d[k][j]));
 }
 void dfs(int x)
 {
@@ -54,7 +54,7 @@ int main()
         floyd();
         for(int i=0;i<n;i++)
         {
-            if(!vis[i])
+            if(!vis[i])//new cc
             {
                 printf("%s",names[i].c_str());
                 dfs(i);
