@@ -1,3 +1,5 @@
+//二分 Kruskal Dijkstra Bellman-Ford Floyd
+//割顶和桥 BCC SCC Dinic MCMF LCA 树
 #include<bits/stdc++.h>
 using namespace std;
 typedef long long LL;
@@ -27,18 +29,6 @@ int lowerbound(int key)
         else r=mid-1;
     }
     return l;
-}
-//无根树转有根树
-//vector<int>G[maxn]存放边
-//主程序中p[root]=-1,dfs(root,-1);
-void dfs(int u,int fa)//递归转化以u为根的子树，u的父节点为fa
-{
-    int d=G[u].size();
-    for(int i=0;i<d;i++)
-    {
-        int v=G[u][i];
-        if(v!=fa) dfs(v,p[v]=u);
-    }
 }
 //Kruskal O(ElogE)
 struct Edge
@@ -179,329 +169,6 @@ void floyd()
             for(int j=0;j<n;j++)
                 if(d[i][k]<INF&&d[k][j]<INF)
                 d[i][j]=min(d[i][j],d[i][k]+d[k][j]);
-}
-//BIT O(logn)
-int vis[maxs];
-int lowbit(int x){return x & -x;}
-void add(int x,int v)
-{
-    while(x<=maxs)
-    {
-        vis[x]+=v;
-        x+=lowbit(x);
-    }
-}
-int sum(int x)
-{
-    int ret=0;
-    while(x>0)
-    {
-        ret+=vis[x];
-        x-=lowbit(x);
-    }
-    return ret;
-}
-//RMQ O(nlogn)
-const int maxn=100010;
-int st[20][maxn];
-void RMQinit(int n)
-{
-    for(int i=1;i<=n;i++) scanf("%d",&st[0][i]);
-    for(int i=1;i<18;i++)
-        for(int j=1;j<=n;j++)
-            if(j+(1<<i)-1>n) continue;
-            else st[i][j]=max(st[i-1][j],st[i-1][j+(1<<i-1)]);
-}
-int RMQ(int L,int R)
-{
-    int k=0;
-    while((1<<(k+1))<=R-L+1) k++;
-    return max(st[k][L],st[k][R-(1<<k)+1]);
-}
-//sequence tree O(logn)
-#include<bits/stdc++.h>
-using namespace std;
-#define lson (cur*2)
-#define rson (cur*2+1)
-typedef long long LL;
-const int INF=0x3f3f3f3f;
-int Left;int Right;int v;int op;
-const int maxn=(20005)<<4;
-struct Node
-{
-    int sumv[maxn];int minv[maxn];int maxv[maxn];
-    int addv[maxn];int setv[maxn];
-    void pushup(int cur,int curl,int curr)//更新当前结点
-    {
-        if(curr>curl)//根据子结点的值，更新当前结点的值
-        {
-            sumv[cur]=sumv[lson]+sumv[rson];
-            minv[cur]=min(minv[lson],minv[rson]);
-            maxv[cur]=max(maxv[lson],maxv[rson]);
-        }
-        if(setv[cur]>=0)//如果当前结点有置数标记，根据置数标记的值，更新当前结点的值
-        {
-            minv[cur]=maxv[cur]=setv[cur];
-            sumv[cur]=setv[cur]*(curr-curl+1);
-        }
-        if(addv[cur]!=0)//如果当前结点有加法标记，根据加法标记的值，更新当前结点的值（先置后加）
-        {
-            minv[cur]+=addv[cur];
-            maxv[cur]+=addv[cur];
-            sumv[cur]+=addv[cur]*(curr-curl+1);
-        }
-    }
-    void pushdown(int cur)//向子结点传递标记
-    {
-        if(setv[cur]>=0)//如果当前结点有置数标记，把标记传给子结点，清空【子结点的加法标记】，和当前结点的置数标记
-        {
-            setv[lson]=setv[rson]=setv[cur];
-            addv[lson]=addv[rson]=0;
-            setv[cur]=-1;
-        }
-        if(addv[cur]!=0)//如果当前结点有加法标记，把标记传给子结点，清空当前结点的加法标记
-        {
-            addv[lson]+=addv[cur];
-            addv[rson]+=addv[cur];
-            addv[cur]=0;
-        }
-    }
-    void update(int cur,int curl,int curr)
-    {
-        if(Left<=curl&&Right>=curr)
-        {
-            if(op==1) addv[cur]+=v;
-            else
-            {
-                setv[cur]=v;
-                addv[cur]=0;
-            }
-        }
-        else
-        {
-            pushdown(cur);
-            int mid=curl+(curr-curl)/2;
-            if(Left<=mid) update(lson,curl,mid);
-            else pushup(lson,curl,mid);
-            if(Right>mid) update(rson,mid+1,curr);
-            else pushup(rson,mid+1,curr);
-        }
-        pushup(cur,curl,curr);
-    }
-    int query(int cur,int curl,int curr,int &sm,int &mn,int &mx)
-    {
-        pushup(cur,curl,curr);
-        if(Left<=curl&&Right>=curr)
-        {
-            sm=sumv[cur];
-            mn=minv[cur];
-            mx=maxv[cur];
-        }
-        else
-        {
-            pushdown(cur);
-            int mid=curl+(curr-curl)/2;
-            int lsm=0,lmn=INF,lmx=-INF;
-            int rsm=0,rmn=INF,rmx=-INF;
-            if(Left<=mid) query(lson,curl,mid,lsm,lmn,lmx);
-            else pushup(lson,curl,mid);
-            if(Right>mid) query(rson,mid+1,curr,rsm,rmn,rmx);
-            else pushup(rson,mid+1,curr);
-            sm=lsm+rsm;
-            mn=min(lmn,rmn);
-            mx=max(lmx,rmx);
-        }
-    }
-}nds[25];//开二维矩阵，row=25（实际上可以拼接成一维线段树）
-int main()
-{
-    //freopen("test.txt","r",stdin);
-    //freopen("out.txt","w",stdout);
-    int r,c,m;
-    int q,w,x,y,z;
-    while(scanf("%d%d%d",&r,&c,&m)==3)
-    {
-
-        memset(nds,0,sizeof(nds));
-        for(int i=1;i<=r;i++)
-        {
-            memset(nds[i].setv,-1,sizeof(nds[i].setv));
-            nds[i].setv[1]=0;
-        }
-        while(m--)
-        {
-            scanf("%d%d%d%d%d",&op,&w,&Left,&y,&Right);
-            if(op==3)
-            {
-                int sm=0,mn=INF,mx=-INF;
-                for(int i=w;i<=y;i++)
-                {
-                    int tsm,tmn,tmx;
-                    nds[i].query(1,1,c,tsm,tmn,tmx);
-                    sm+=tsm;mn=min(mn,tmn);mx=max(mx,tmx);
-                }
-                printf("%d %d %d\n",sm,mn,mx);
-            }
-            else
-            {
-                scanf("%d",&v);
-                for(int i=w;i<=y;i++) nds[i].update(1,1,c);
-            }
-        }
-    }
-    return 0;
-}
-//Treap
-struct treap
-{
-	int l,r,rnd,val;//son,priority,val
-}t[1005];
-void rturn(int &k)//left son to root
-{
-	int tmp=t[k].l;t[k].l=t[tmp].r;t[tmp].r=k;k=tmp;
-}
-void lturn(int &k)//right son to root
-{
-	int tmp=t[k].r;t[k].r=t[tmp].l;t[tmp].l=k;k=tmp;
-}
-void insert(int &k,int x)//current root,key
-{
-	if(k==0)
-	{
-		k=++cnt;
-		t[k].val=x;t[k].rnd=rand();
-		t[k].l=t[k].r=-1;
-		return;
-	}
-    if(t[k].val==x)return;
-	else if(x>t[k].val)
-	{
-		insert(t[k].r,x);
-		if(t[t[k].r].rnd<t[k].rnd)lturn(k);//if right has larger rnd,move to root
-	}
-	else
-	{
-		insert(t[k].l,x);
-		if(t[t[k].l].rnd<t[k].rnd)rturn(k);
-	}
-}
-void remove(int &k,int x)
-{
-    if(x==t[k].val)
-    {
-        if(t[k].l!=-1&&t[k].r==-1) t[k]=t[k].l;
-        else if(t[k].l==-1&&t[k].r!=-1) t[k]=t[k].r;
-        else
-        {
-            int d=(t[t[k].l].rnd>t[t[k].r].rnd)?1:0;
-            if(d)//left to root,remove from right
-            {
-                rturn(k);
-                remove(t[k].r,x);
-            }
-            else
-            {
-                lturn(k);
-                remove(t[k].l,x);
-            }
-        }
-    }
-    else if(x>t[k].val) remove(t[k].r,x);
-	else remove(t[k].l,x);
-}
-void query(int k,int val)
-{
-    if(!k)return;
-    if(t[k].val==val){return k;}
-    if(t[k].val>val)query(t[k].l,val);
-    else query(t[k].r,val);
-}
-//Splay
-const int maxn=1005;
-int n,size,root;
-int ch[maxn][2],num[maxn],fa[maxn];
-void pushup(int x){};
-void rotate(int x,int &k)//exchange x with its father
-{
-    int y=fa[x],z=fa[y],l,r;
-    if(ch[y][0]==x)l=0;else l=1;r=l^1;
-    if(y==k)k=x;
-    else{if(ch[z][0]==y)ch[z][0]=x;else ch[z][1]=x;}
-    fa[x]=z;fa[y]=x;fa[ch[x][r]]=y;
-    ch[y][l]=ch[x][r];ch[x][r]=y;
-}
-void splay(int x,int &k)// move x to k
-{
-	int y,z;
-	while(x!=k)
-	{
-		y=fa[x],z=fa[y];
-		if(y!=k)
-		{
-			if((ch[y][0]==x)^(ch[z][0]==y))rotate(x,k);
-			else rotate(y,k);
-		}
-		rotate(x,k);
-	}
-}
-void insert(int x,int v)
-{
-    int y;
-    while(true)
-    {
-        y=ch[x][num[x]<v];
-        if(y==0)//new node
-        {
-            y=++size;
-            num[y]=v;
-            ch[y][0]=ch[y][1]=0;
-            fa[y]=x;
-            ch[x][num[x]<v]=y;
-            break;
-        }
-        x=y;
-    }
-    splay(y,root);//move to root after insertion
-}
-void remove(int x)
-{
-	splay(x,root);
-	if(ch[x][0]*ch[x][1]==0)//x has one child,make it root
-	{root=ch[x][0]+ch[x][1];}
-	else
-	{
-		int k=ch[x][1];
-		while(ch[k][0])k=ch[k][0];//most left one in right tree
-		ch[k][0]=ch[x][0];fa[ch[x][0]]=k;//k replace x
-		root=ch[x][1];//right tree to root
-	}
-	fa[root]=0;
-}
-int pre(int x)//most right one in left tree
-{
-    int tmp=ch[x][0];
-    while(ch[tmp][1])tmp=ch[tmp][1];
-    return num[tmp];
-}
-int suc(int x)//most left one in right tree
-{
-    int tmp=ch[x][1];
-    while(ch[tmp][0])tmp=ch[tmp][0];
-    return num[tmp];
-}
-void merge(int left,int right)
-{
-    splay(left,num[left]);
-    ch[left][1]=right;
-    pushup(left);
-}
-void split(int &o,int k,int &left,int &right)
-{
-    splay(o,k);
-    left=o;
-    right=ch[o][1];
-    ch[o][1]=0;
-    pushup(left);
 }
 //DFS
 vector<int>G[maxn];int vis[maxn];int cc;int n;
@@ -996,3 +663,272 @@ struct MCMF {
   }
 
 };
+//LCA
+/*
+ * LCA  (POJ 1330)
+ * 在线算法 DFS + ST O(nlogn)
+ */
+const int MAXN = 10010;
+int rmq[2*MAXN];//rmq数组，就是欧拉序列对应的深度序列
+struct ST
+{
+    int mm[2*MAXN];
+    int dp[2*MAXN][20];//最小值对应的下标
+    void init(int n)
+    {
+        mm[0] = -1;
+        for(int i = 1;i <= n;i++)
+        {
+            mm[i] = ((i&(i-1)) == 0)?mm[i-1]+1:mm[i-1];
+            dp[i][0] = i;
+        }
+        for(int j = 1; j <= mm[n];j++)
+            for(int i = 1; i + (1<<j) - 1 <= n; i++)
+                dp[i][j] = rmq[dp[i][j-1]] < rmq[dp[i+(1<<(j-1))][j-1]]?dp[i][j-1]:dp[i+(1<<(j-1))][j-1];
+    }
+    int query(int a,int b)//查询[a,b]之间最小值的下标
+    {
+        if(a > b)swap(a,b);
+        int k = mm[b-a+1];
+        return rmq[dp[a][k]] <= rmq[dp[b-(1<<k)+1][k]]?dp[a][k]:dp[b-(1<<k)+1][k];
+    }
+};
+//边的结构体定义
+struct Edge
+{
+    int to,next;
+};
+Edge edge[MAXN*2];
+int tot,head[MAXN];
+
+int F[MAXN*2];//欧拉序列，就是dfs遍历的顺序，长度为2*n-1,下标从1开始
+int P[MAXN];//P[i]表示点i在F中第一次出现的位置
+int cnt;
+
+ST st;
+void init()
+{
+    tot = 0;
+    memset(head,-1,sizeof(head));
+}
+void addedge(int u,int v)//加边，无向边需要加两次
+{
+    edge[tot].to = v;
+    edge[tot].next = head[u];
+    head[u] = tot++;
+}
+void dfs(int u,int pre,int dep)
+{
+    F[++cnt] = u;
+    rmq[cnt] = dep;
+    P[u] = cnt;
+    for(int i = head[u];i != -1;i = edge[i].next)
+    {
+        int v = edge[i].to;
+        if(v == pre)continue;
+        dfs(v,u,dep+1);
+        F[++cnt] = u;
+        rmq[cnt] = dep;
+    }
+}
+void LCA_init(int root,int node_num)//查询LCA前的初始化
+{
+    cnt = 0;
+    dfs(root,root,0);
+    st.init(2*node_num-1);
+}
+int query_lca(int u,int v)//查询u,v的lca编号
+{
+    return F[st.query(P[u],P[v])];
+}
+bool flag[MAXN];
+int main()
+{
+    //freopen("in.txt","r",stdin);
+    //freopen("out.txt","w",stdout);
+    int T;
+    int N;
+    int u,v;
+    scanf("%d",&T);
+    while(T--)
+    {
+        scanf("%d",&N);
+        init();
+        memset(flag,false,sizeof(flag));
+        for(int i = 1; i < N;i++)
+        {
+            scanf("%d%d",&u,&v);
+            addedge(u,v);
+            addedge(v,u);
+            flag[v] = true;
+        }
+        int root;
+        for(int i = 1; i <= N;i++)
+            if(!flag[i])
+            {
+                root = i;
+                break;
+            }
+        LCA_init(root,N);
+        scanf("%d%d",&u,&v);
+        printf("%d\n",query_lca(u,v));
+    }
+    return 0;
+}
+/*
+ * POJ 1470
+ * 给出一颗有向树，Q个查询
+ * 输出查询结果中每个点出现次数
+ */
+/*
+ * LCA离线算法，Tarjan
+ * 复杂度O(n+Q);
+ */
+const int MAXN = 1010;
+const int MAXQ = 500010;//查询数的最大值
+
+//并查集部分
+int F[MAXN];//需要初始化为-1
+int find(int x)
+{
+    if(F[x] == -1)return x;
+    return F[x] = find(F[x]);
+}
+void bing(int u,int v)
+{
+    int t1 = find(u);
+    int t2 = find(v);
+    if(t1 != t2)
+        F[t1] = t2;
+}
+//************************
+bool vis[MAXN];//访问标记
+int ancestor[MAXN];//祖先
+struct Edge
+{
+    int to,next;
+}edge[MAXN*2];
+int head[MAXN],tot;
+void addedge(int u,int v)
+{
+    edge[tot].to = v;
+    edge[tot].next = head[u];
+    head[u] = tot++;
+}
+
+struct Query
+{
+    int q,next;
+    int index;//查询编号
+}query[MAXQ*2];
+int answer[MAXQ];//存储最后的查询结果，下标0~Q-1
+int h[MAXQ];
+int tt;
+int Q;
+
+void add_query(int u,int v,int index)
+{
+    query[tt].q = v;
+    query[tt].next = h[u];
+    query[tt].index = index;
+    h[u] = tt++;
+    query[tt].q = u;
+    query[tt].next = h[v];
+    query[tt].index = index;
+    h[v] = tt++;
+}
+
+void init()
+{
+    tot = 0;
+    memset(head,-1,sizeof(head));
+    tt = 0;
+    memset(h,-1,sizeof(h));
+    memset(vis,false,sizeof(vis));
+    memset(F,-1,sizeof(F));
+    memset(ancestor,0,sizeof(ancestor));
+}
+
+void LCA(int u)
+{
+    ancestor[u] = u;
+    vis[u] = true;
+    for(int i = head[u];i != -1;i = edge[i].next)
+    {
+        int v = edge[i].to;
+        if(vis[v])continue;
+        LCA(v);
+        bing(u,v);
+        ancestor[find(u)] = u;
+    }
+    for(int i = h[u];i != -1;i = query[i].next)
+    {
+        int v = query[i].q;
+        if(vis[v])
+        {
+            answer[query[i].index] = ancestor[find(v)];
+        }
+    }
+}
+
+bool flag[MAXN];
+int Count_num[MAXN];
+int main()
+{
+    //freopen("in.txt","r",stdin);
+    //freopen("out.txt","w",stdout);
+    int n;
+    int u,v,k;
+    while(scanf("%d",&n) == 1)
+    {
+        init();
+        memset(flag,false,sizeof(flag));
+        for(int i = 1;i <= n;i++)
+        {
+            scanf("%d:(%d)",&u,&k);
+            while(k--)
+            {
+                scanf("%d",&v);
+                flag[v] = true;
+                addedge(u,v);
+                addedge(v,u);
+            }
+        }
+        scanf("%d",&Q);
+        for(int i = 0;i < Q;i++)
+        {
+            char ch;
+            cin>>ch;
+            scanf("%d %d)",&u,&v);
+            add_query(u,v,i);
+        }
+        int root;
+        for(int i = 1;i <= n;i++)
+            if(!flag[i])
+            {
+                root = i;
+                break;
+            }
+        LCA(root);
+        memset(Count_num,0,sizeof(Count_num));
+        for(int i = 0;i < Q;i++)
+            Count_num[answer[i]]++;
+        for(int i = 1;i <= n;i++)
+            if(Count_num[i] > 0)
+                printf("%d:%d\n",i,Count_num[i]);
+    }
+    return 0;
+}
+
+//笛卡儿树(Cartesian Tree) 是一种特殊的堆，它根据一个长度为n的数组A建立。
+//它的根是A的最小元素位置i，而左子树和右子树分别为A[1. . . i-1]和A[i+1. . . n]的笛卡儿树
+//RMQ定理 数组A的Cartesian树记为C(A)，则RMQ(A, i, j) = LCA(C(A), i, j)
+/*树的性质
+以i为根的子树直径d[i] 以i为根的子树深度g[i] 结点i在原树中的深度depth[i]
+g[i] = max{depth[i], g[j]}
+d[i]= max{g[u]+g[v], d[j]}
+设T(u, v)为原树删除边(u, v)后以v为顶点的有根树（ u为0表示不删除任何边），
+d[u, v]为T(u, v)的深度，则有递推式d[u, v] = max{0, d[v, w] + 1}，
+其中w是v不等于u的儿子
+则每个结点i的最远点离它的距离就是d[0, i]，时间复杂度为O(n)
+*/
