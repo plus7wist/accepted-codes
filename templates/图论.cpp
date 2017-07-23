@@ -1,35 +1,10 @@
-//二分 Kruskal Dijkstra Bellman-Ford Floyd
+//Kruskal Dijkstra Bellman-Ford Floyd
 //割顶和桥 BCC SCC Dinic MCMF LCA 树
+//拓扑排序 欧拉回路 最小树形图
 #include<bits/stdc++.h>
 using namespace std;
 typedef long long LL;
 const int INF=0x3f3f3f3f;
-//二分
-int len;int a[]={1,2,3,3,4,5};
-int upperbound(int key)
-{
-    int l=0,r=len-1;
-    //cout<<l<<' '<<r<<endl;
-    while(l<r)
-    {
-        int mid=l+(r-l)/2;
-        if(key>=a[mid]) l=mid+1;
-        else r=mid;
-    }
-    return l;
-}
-int lowerbound(int key)
-{
-    int l=0,r=len-1;
-    //cout<<l<<' '<<r<<endl;
-    while(l<r)
-    {
-        int mid=l+(r+1-l)/2;
-        if(key>=a[mid]) l=mid;
-        else r=mid-1;
-    }
-    return l;
-}
 //Kruskal O(ElogE)
 struct Edge
 {
@@ -66,6 +41,11 @@ int solve()
     int ans=Kruskal(n,edge,need);
     return ans;
 }
+/*
+* 次小生成树
+* 求最小生成树时，用数组Max[i][j]来表示MST中i到j最大边权
+* 求完后，直接枚举所有不在MST中的边，替换掉最大边权的边，更新答案
+*/
 //Dijkstra O(ElogV)
 const int maxn=1005;const int INF=0x3f3f3f3f;
 struct Edge
@@ -932,3 +912,145 @@ d[u, v]为T(u, v)的深度，则有递推式d[u, v] = max{0, d[v, w] + 1}，
 其中w是v不等于u的儿子
 则每个结点i的最远点离它的距离就是d[0, i]，时间复杂度为O(n)
 */
+//拓扑排序判环
+vector<int> G[MAXN];  // 邻接表。
+int son[MAXN];          // 入度数。
+void topo()
+{
+    queue<int> que;
+    int ok = 0;
+    for (int i = 0; i < n; i++)
+        if (!son[i])
+            que.push(i);    // 入度为0时入队。
+
+    while (!que.empty())
+    {
+        if (que.size() > 1)
+            ok = 1;         // 当队列中个数超多1时，表示有不唯一解。
+        int t = que.front();
+        que.pop();
+        cnt--;          //  如果队列为空后，计数器> 0， 说明存在环结构。
+        for (int i = 0; i < G[t].size(); i++)
+            if (--son[G[t][i]] == 0) // 判断减掉当前点的关系后，点的入度是否为0。
+                que.push(G[t][i]);
+    }
+}
+//欧拉回路,inv[i]是i的反向边
+vector<int>route;int cnt;int head[maxn];
+struct edge{int to,int next}edges;
+void insert(int from,int to){edges[cnt].to=to;edges[cnt].next=head[from];head[from]=cnt++;}
+void eulerroute(int u)
+{
+    for(int i=head[u];i;i=edges[i].next)
+    {
+        if(!mk[i])
+        {
+            mk[i]=mk[inv[i]]=1;
+            eulerroute(edges[i]);
+            route.push(i);
+        }
+    }
+}
+/*
+* 最小树形图
+* int型
+* 复杂度O(NM)
+* 点从0开始
+*/
+const int INF = 0x3f3f3f3f;
+const int MAXN = 1010;
+const int MAXM = 40010;
+struct Edge
+{int u,v,cost;}edge[MAXM];
+int pre[MAXN],id[MAXN],visit[MAXN],in[MAXN];
+int zhuliu(int root,int n,int m,Edge edge[])
+{
+    int res = 0,u,v;
+    while(1)
+    {
+        for(int i = 0;i < n;i++)
+        in[i] = INF;
+        for(int i = 0;i < m;i++)
+        if(edge[i].u != edge[i].v && edge[i].cost < in[edge[i].v])
+        {
+            pre[edge[i].v] = edge[i].u;
+            in[edge[i].v] = edge[i].cost;
+        }
+        for(int i = 0;i < n;i++)
+        if(i != root && in[i] == INF)
+        return -1;//不存在最小树形图
+        int tn = 0;
+        memset(id,-1,sizeof(id));
+        memset(visit,-1,sizeof(visit));
+        in[root] = 0;
+        for(int i = 0;i < n;i++)
+        {
+            res += in[i];
+            v = i;
+            while( visit[v] != i && id[v] == -1 && v != root)
+            {
+                visit[v] = i;
+                v = pre[v];
+            }
+            if( v != root && id[v] == -1 )
+            {
+                for(int u = pre[v]; u != v ;u = pre[u])
+                id[u] = tn;
+                id[v] = tn++;
+            }
+        }
+        if(tn == 0)break;//没有有向环
+        for(int i = 0;i < n;i++)
+        if(id[i] == -1)
+        id[i] = tn++;
+        for(int i = 0;i < m;)
+        {
+            v = edge[i].v;
+            edge[i].u = id[edge[i].u];
+            edge[i].v = id[edge[i].v];
+            if(edge[i].u != edge[i].v)
+            edge[i++].cost -= in[v];
+            else swap(edge[i],edge[--m]);
+        }
+        n = tn;
+        root = id[root];
+    }
+    return res;
+}
+int g[MAXN][MAXN];
+int main()
+{
+    int n,m;
+    int iCase = 0;
+    int T;
+    scanf("%d",&T);
+    while( T-- )
+    {
+        iCase ++;
+        scanf("%d%d",&n,&m);
+        for(int i = 0;i < n;i++)
+        for(int j = 0;j < n;j++)
+        g[i][j] = INF;
+        int u,v,cost;
+        while(m--)
+        {
+            scanf("%d%d%d",&u,&v,&cost);
+            if(u == v)continue;
+            g[u][v] = min(g[u][v],cost);
+        }
+        int L = 0;
+        for(int i = 0;i < n;i++)
+        for(int j = 0;j < n;j++)
+        if(g[i][j] < INF)
+        {
+            edge[L].u = i;
+            edge[L].v = j;
+            edge[L++].cost = g[i][j];
+        }
+        int ans = zhuliu(0,n,L,edge);
+        printf("Case #%d: ",iCase);
+        if(ans == -1)printf("Possums!\n");
+        else printf("%d\n",ans);
+    }
+    return 0;
+}

@@ -1,4 +1,4 @@
-//hash LCS LIS 双重BFS sg函数打表
+//二分 hash LCS LIS 双重BFS sg函数打表
 //GCD 扩展GCD 中国剩余定理 快速幂 大步小步
 //组合数 排列位数 全排列 素数表 欧拉函数 质因子分解
 //矩阵 FFT Catalan 生成函数 置换
@@ -6,6 +6,32 @@
 using namespace std;
 typedef long long LL;
 const int INF=0x3f3f3f3f;
+//二分
+int len;int a[]={1,2,3,3,4,5};
+int upperbound(int key)
+{
+    int l=0,r=len-1;
+    //cout<<l<<' '<<r<<endl;
+    while(l<r)
+    {
+        int mid=l+(r-l)/2;
+        if(key>=a[mid]) l=mid+1;
+        else r=mid;
+    }
+    return l;
+}
+int lowerbound(int key)
+{
+    int l=0,r=len-1;
+    //cout<<l<<' '<<r<<endl;
+    while(l<r)
+    {
+        int mid=l+(r+1-l)/2;
+        if(key>=a[mid]) l=mid;
+        else r=mid-1;
+    }
+    return l;
+}
 //DJB hash
 LL hashed(char str[])
 {
