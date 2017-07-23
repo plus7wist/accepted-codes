@@ -10,7 +10,7 @@ int upperbound(int key)
     //cout<<l<<' '<<r<<endl;
     while(l<r)
     {
-        int mid=(l+r)/2;
+        int mid=l+(r-l)/2;
         if(key>=a[mid]) l=mid+1;
         else r=mid;
     }
@@ -22,7 +22,7 @@ int lowerbound(int key)
     //cout<<l<<' '<<r<<endl;
     while(l<r)
     {
-        int mid=(l+r+1)/2;
+        int mid=l+(r+1-l)/2;
         if(key>=a[mid]) l=mid;
         else r=mid-1;
     }
@@ -204,7 +204,7 @@ int sum(int x)
 //RMQ O(nlogn)
 const int maxn=100010;
 int st[20][maxn];
-void RMQ_init(int n)
+void RMQinit(int n)
 {
     for(int i=1;i<=n;i++) scanf("%d",&st[0][i]);
     for(int i=1;i<18;i++)
@@ -695,7 +695,7 @@ struct Dinic {
   }
 
   void ClearFlow() {
-    for(int i = 0; i < edges.size(); i++) edges[i].flow = 0;    
+    for(int i = 0; i < edges.size(); i++) edges[i].flow = 0;
   }
 
   void AddEdge(int from, int to, int cap) {
@@ -819,7 +819,7 @@ struct ISAP {
   }
 
   void ClearFlow() {
-    for(int i = 0; i < edges.size(); i++) edges[i].flow = 0;    
+    for(int i = 0; i < edges.size(); i++) edges[i].flow = 0;
   }
 
   int Augment() {
@@ -891,7 +891,7 @@ struct ISAP {
   void Reduce() {
     for(int i = 0; i < edges.size(); i++) edges[i].cap -= edges[i].flow;
   }
-  
+
 //Min Cost Max Flow
 struct Edge {
   int from, to, cap, flow, cost;
