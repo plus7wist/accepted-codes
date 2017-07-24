@@ -8,16 +8,15 @@ int main()
     //ios::sync_with_stdio(false);
     //freopen("test.txt","r",stdin);
     //freopen("out.txt","w",stdout);
-    int n;//sum(x,y)=x+x+1+..+x+y-1=yx+y*(y-1)/2
+    int n;//n=sum(x,y)=x+x+1+..+x+y-1=yx+y*(y-1)/2
     while(scanf("%d",&n)==1)//x=(sum-y*(y-1)/2)/y
     {
         int div=sqrt(2*n)+1;
         bool flag=0;
-        for(int i=div;i>=2;i--)//i:y
+        for(int y=div;y>=2;y--)
         {
-            int f=2*i;//f:y*2
-            int a=2*n+i-i*i;//a:sum*2
-            int sum=2*n*i+n*(n-1);
+            int f=2*y;
+            int a=2*n+y-y*y;//a:sum*2-y*(y-1)
             if(a%f==0&&a/f)
             {
                 flag=1;
