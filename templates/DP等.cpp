@@ -1,5 +1,5 @@
 //二分 hash 双重BFS STL Maxsum LCS LIS
-//背包 区间 树形 数位
+//背包 区间 树形 数位 记忆化搜索
 #include<stdio.h>
 #include<stdlib.h>
 #include<algorithm>
@@ -94,7 +94,7 @@ for(i=m.begin();i!=iend;i++)
 }
 //Maxsum
 int a[n];
-int solve()
+int maxsum()
 {
     int cur=0;int mx=0;
     for(int i=0;i<n;i++)
@@ -106,9 +106,9 @@ int solve()
     return mx;
 }
 //LCS
-///O(n^2)
+///O(n^2),a,b start from 1
 char a[m];char b[n];int d[n];//(n<m)
-int solve()
+int LCS()
 {
     for(int i=0;i<=n;i++) d[i]=0;
     for(int i=1;i<=m;i++)
@@ -176,7 +176,7 @@ int main()
 */
 ///LIS
 int a[n];int g[n];int d[n];
-int solve()
+int LIS()
 {
     for(int i=0; i<n; i++)
     {
@@ -188,7 +188,7 @@ int solve()
 }
 //最大递增子序列的和
 int a[maxn];int dp[maxn];
-int solve()
+int LISsum()
 {
     int ans=0;
     for(int i=0;i<n;i++)
@@ -373,6 +373,114 @@ int main()
         memset(dp,-1,sizeof(dp));
         int ans=dfs(todigit(b),0,1)-dfs(todigit(a-1),0,1);
         printf("%d\n",ans);
+    }
+    return 0;
+}
+//记忆化搜索 HDU 1428
+#include <stdio.h>
+#include <iostream>
+#include <algorithm>
+#include <string.h>
+#include <queue>
+using namespace std;
+const int MAXN=55;
+const int INF=0x3f3f3f3f;
+int a[MAXN][MAXN];
+int dis[MAXN][MAXN];
+long long dp[MAXN][MAXN];
+int n;
+bool used[MAXN][MAXN];
+
+struct Node
+{
+    int x,y;
+    int d;
+    friend bool operator < (Node a,Node b)
+    {
+        return a.d>b.d;
+    }
+};
+priority_queue<Node>q;
+
+void init()
+{
+    while(!q.empty())q.pop();
+    memset(used,false,sizeof(used));
+    Node tmp,now;
+    tmp.x=n;
+    tmp.y=n;
+    tmp.d=a[n][n];
+    q.push(tmp);
+    dis[n][n]=a[n][n];
+    used[n][n]=true;
+    while(!q.empty())
+    {
+        tmp=q.top();
+        q.pop();
+        if(tmp.x>1 && !used[tmp.x-1][tmp.y])
+        {
+            now.x=tmp.x-1;
+            now.y=tmp.y;
+            now.d=tmp.d+a[now.x][now.y];
+            q.push(now);
+            dis[now.x][now.y]=now.d;
+            used[now.x][now.y]=true;
+        }
+        if(tmp.x<n && !used[tmp.x+1][tmp.y])
+        {
+            now.x=tmp.x+1;
+            now.y=tmp.y;
+            now.d=tmp.d+a[now.x][now.y];
+            q.push(now);
+            dis[now.x][now.y]=now.d;
+            used[now.x][now.y]=true;
+        }
+        if(tmp.y>1 && !used[tmp.x][tmp.y-1])
+        {
+            now.x=tmp.x;
+            now.y=tmp.y-1;
+            now.d=tmp.d+a[now.x][now.y];
+            q.push(now);
+            dis[now.x][now.y]=now.d;
+            used[now.x][now.y]=true;
+        }
+        if(tmp.y<n && !used[tmp.x][tmp.y+1])
+        {
+            now.x=tmp.x;
+            now.y=tmp.y+1;
+            now.d=tmp.d+a[now.x][now.y];
+            q.push(now);
+            dis[now.x][now.y]=now.d;
+            used[now.x][now.y]=true;
+        }
+    }
+}
+
+long long solve(int x,int y)
+{
+    if(dp[x][y]!=-1)return dp[x][y];
+    dp[x][y]=0;
+    if(x>1&&dis[x][y]>dis[x-1][y])dp[x][y]+=solve(x-1,y);
+    if(x<n&&dis[x][y]>dis[x+1][y])dp[x][y]+=solve(x+1,y);
+    if(y>1&&dis[x][y]>dis[x][y-1])dp[x][y]+=solve(x,y-1);
+    if(y<n&&dis[x][y]>dis[x][y+1])dp[x][y]+=solve(x,y+1);
+    return dp[x][y];
+
+}
+
+int main()
+{
+    while(scanf("%d",&n)==1)
+    {
+        for(int i=1;i<=n;i++)
+          for(int j=1;j<=n;j++)
+          {
+              scanf("%d",&a[i][j]);
+              dp[i][j]=-1;
+          }
+        dp[n][n]=1;
+        init();
+        printf("%I64d\n",solve(1,1));
     }
     return 0;
 }
