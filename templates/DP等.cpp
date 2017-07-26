@@ -1,5 +1,6 @@
 //二分 hash 双重BFS STL Maxsum LCS LIS
 //背包 区间 树形 数位 记忆化搜索
+//状压 插头
 #include<stdio.h>
 #include<stdlib.h>
 #include<algorithm>
@@ -92,6 +93,14 @@ for(i=m.begin();i!=iend;i++)
     cout<<(*i).second<<"的价钱是"
     <<(*i).first<<"元/斤\n";
 }
+do{
+
+}while(next_permutation(a,a+n));
+/*
+nth_element(start, start+n, end) 方法可以使第n大元素处于第n位置
+（从0开始,其位置是下标为 n的元素），并且比这个元素小的元素都排在这个元素之前，
+比这个元素大的元素都排在这个元素之后，但不能保证他们是有序的，
+*/
 //Maxsum
 int a[n];
 int maxsum()
@@ -679,4 +688,122 @@ int main()
         printf("%I64d\n",solve(1,1));
     }
     return 0;
+}
+//状态压缩
+#include <cstdio>
+#include <cstring>
+using namespace std;
+#define mod 100000000
+int M,N,top = 0;
+int state[600],num[110];
+int dp[20][600];
+int cur[20];
+inline bool ok(int x)
+{
+    if(x&x<<1)return 0;
+    return 1;
+}
+void init()
+{
+    top = 0;
+    int total = 1 << N;
+    for(int i = 0; i < total; ++i)
+    {
+        if(ok(i))state[++top] = i;
+    }
+}
+inline bool fit(int x,int k)
+{
+    if(x&cur[k])return 0;
+    return 1;
+}
+inline int jcount(int x)
+{
+    int cnt=0;
+    while(x)
+    {
+        cnt++;
+        x&=(x-1);
+    }
+    return cnt;
+}
+
+int main()
+{
+    while(scanf("%d%d",&M,&N)!= EOF)
+    {
+        init();
+        memset(dp,0,sizeof(dp));
+        for(int i = 1; i <= M; ++i)
+        {
+            cur[i] = 0;
+            int num;
+            for(int j = 1; j <= N; ++j)
+            {
+                scanf("%d",&num);
+                if(num == 0)cur[i] +=(1<<(N-j));
+            }
+        }
+        for(int i = 1; i <= top; i++)
+        {
+            if(fit(state[i],1))
+            {
+                dp[1][i] = 1;
+            }
+        }
+        for(int i = 2; i <= M; ++i)
+        {
+            for(int k = 1; k <= top; ++k)
+            {
+                if(!fit(state[k],i))continue;
+                for(int j = 1; j <= top ; ++j)
+                {
+                    if(!fit(state[j],i-1))continue;
+                    if(state[k]&state[j])continue;
+                    dp[i][k] = (dp[i][k] +dp[i-1][j])%mod;
+                }
+            }
+        }
+        int ans = 0;
+        for(int i = 1; i <= top; ++i)
+        {
+            ans = (ans + dp[M][i])%mod;
+        }
+        printf("%d\n",ans);
+    }
+}
+//插头DP
+#include <cstdio>
+#include <cstring>
+#include <algorithm>
+using namespace std;
+
+long long dp[2][1<<11];
+
+int main()
+{
+	int n,m;
+	while(scanf("%d%d",&n,&m),(n||m))
+	{
+		int total=1<<m;
+		int pre=0,now=1;
+		memset(dp[now],0,sizeof(dp[now]));
+		dp[now][0]=1;
+
+		for(int i=0;i<n;i++)
+			for(int j=0;j<m;j++)
+		{
+			swap(now,pre);
+			memset(dp[now],0,sizeof(dp[now]));
+
+			for(int S=0;S<total;S++) if( dp[pre][S] )
+			{
+				dp[now][S^(1<<j)]+=dp[pre][S];
+				if( j && S&(1<<(j-1)) && !(S&(1<<j)) )
+					dp[now][S^(1<<(j-1))]+=dp[pre][S];
+			}
+		}
+
+		printf("%lld\n",dp[now][0]);
+	}
 }

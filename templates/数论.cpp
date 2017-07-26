@@ -308,6 +308,7 @@ LL gcd(LL a,LL b)
 //extend GCD
 //求解一组x,y使得ax+by=gcd(a,b)=d
 //a*x+b*y=1 求得x即为a%b的逆元,y即为b%a的逆元
+//A,B不互质时，A^B mod C = A^(B mod phi(C)+phi(C))
 LL exgcd(LL a,LL b,LL &x,LL &y)
 {
     if (b==0)
