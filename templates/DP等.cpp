@@ -201,23 +201,72 @@ int LISsum()
     }
     return ans;
 }
+//LCIS
+int LCIS()
+{
+    int F[MAXLEN];
+    memset(F,0,sizeof(F));
+    for(int i=1;i<=Len1;++i)
+    {
+        int max=0;
+        for(int j=1;j<=Len2;++j)
+        {
+            if(Seq2[j]<Seq1[i])  { max=MAX(max,F[j]); }
+            if(Seq1[i]==Seq2[j]) { F[j]=max+1; }
+        }
+    }
+    int ans=-1;
+    for(int i=1;i<=Len1;++i)
+    {
+        ans=MAX(ans,F[i]);
+    }
+    return ans;
+}
 ///背包
 int t;//循环次数
 int cnt=0;
-int money;int dp[MAXN];
+int volume;int dp[MAXN];
+//完全背包 O(VN)
+void cpack()
+{
+    for(int i=0;i<n;i++)
+    {
+        //for(int j=c[i];j<=v;j++)
+            //dp[i]=max(dp[i],dp[i-c[j]]+v[j]);
+        cpack(c[i],v[i]);
+    }
+}
 void cpack(int cost,int value)
 {
-    for(int i=money;i<=cost;i++)
+    for(int i=cost;i<=volume;i++)
         dp[i]=min(dp[i],dp[i-cost]+value);
+}
+//01背包 O(VN)
+void zopack()
+{
+    for(int i=0;in;i++)
+    {
+        //for(int j=v;j>=c[i];j--)
+            //dp[i]=max(dp[i],dp[i-c[j]]+v[j]);
+        zopack(c[i],v[i]);
+    }
 }
 void zopack(int cost,int value)
 {
-    for(int i=cost;i>=money;i--)
+    for(int i=volume;i>=cost;i--)
         dp[i]=max(dp[i],dp[i-cost]+value);
+}
+//多重背包 O(V*sum(logMi)),Mi is ith amount
+void mpack()
+{
+    for(int i=0;i<n;i++)
+    {
+        mpack(c[i],v[i],m[i]);
+    }
 }
 void mpack(int cost,int value,int num)
 {
-    if(cost*num>=money)
+    if(cost*num>=volume)
     {
         cpack(cost,value);
         return;
@@ -228,6 +277,153 @@ void mpack(int cost,int value,int num)
         num-=k;
     }
     zopack(num*cost,num*value);
+}
+//当问题是“每种有若干件的物品能否填满给定容量的背包”，只须考虑填满背包的
+//可行性，不需考虑每件物品的价值时，多重背包问题同样有 O(V N) 复杂度的算法。
+//最终 F[N][0 . . . V ] 便是多重背包可行性问题的答案
+void mpack(int cost,int value,int num)
+{
+    for(int i=1;i<=volume;i++) dp[0][i]=-1;
+    dp[0][0]=0;
+    for(int i=1;i<=n;i++)
+    {
+        for(int j=0;j<=volume;j++)
+            if(dp[i-1][j]>=0) dp[i][j]=m[i];
+            else dp[i][j]=-1;
+        for(int j=0;j<=volume-c[i];j++)
+            if(dp[i][j]>0) d[i][j+c[i]]=max(dp[i][j+c[i]],dp[i][j]-1);
+    }
+
+}
+//二维背包，其他情况下类推即可
+void zopack(int cost1,int cost2,int value)
+{
+    for(int i=volume1;i>=cost1;i--)
+        for(int j=volume2;j>=vost2;j--)
+        dp[i][j]=max(dp[i][j],dp[i-cost1][j-cost2]+value);
+}
+//有时，“二维费用”的条件是以这样一种隐含的方式给出的：最多只能取 U 件物品。
+//分组背包
+//物品被划分为 K 组，每组中的物品互相冲突，最多选一件
+void gpack()
+{
+    for(int kk=1;kk<=k;kk++)
+    {
+        for(int i=v;i<=0;i--)
+            for(int j=0;j<size[k];j++)
+            dp[i]=max(dp[i],dp[i-c[j]]+w[j]);
+    }
+}
+//依赖背包
+//物品 i 依赖于物品 j，表示若选物品 i，则必须选物品 j
+#include<stdio.h>
+#include<algorithm>
+#include <iostream>
+using namespace std;
+const int maxn=1000+10;
+int w[maxn],b[maxn];
+int f[maxn];
+int max(int a,int b)
+{
+    return a>b? a:b;
+}
+int main()
+{
+    int n,v;
+    int i,j,k;
+    int t1,t2;
+    while(scanf("%d%d",&n,&v)!=EOF)
+    {
+        for(i=1; i<=n; i++)
+        {
+            scanf("%d%d",&w[i],&b[i]);
+        }
+        memset(f,0,sizeof(f));
+        for(i=1; i<=n; i++)
+            if(b[i]==i)//找出主件
+            {
+                memset(c,0,sizeof(c));
+                for(t2=1; t2<=n; t2++) //对附件进行01背包处理，使得在相同体积下得到的价值最大
+                    if(b[t2]==i&&b[t2]!=t2)
+                    {
+                        for(t1=v-1; t1>=0; t1--)
+                            if(t1-1>=0)
+                                c[t1]=max(c[t1],c[t1-1]+w[t2]);
+                    }
+                c[v]=c[v-1]+w[i];
+                for(j=v; j>=0; j--)
+                    for(k=1; k<=v; k++) //此时看作相当于"V件物品"，每件”物品体积“相当为'k',"价值为"，c[k-1]+w[i],(i为主件)
+                    {
+                        if(j-k>=0)
+                            f[j]=max(f[j],f[j-k]+w[i]+c[k-1]);
+                    }
+            }
+        printf("%d\n",f[v]);
+    }
+    return 0;
+}
+/*
+泛化物品
+在背包容量为 V 的背包问题中，泛化物品是一个定义域为 0 . . . V中的整数的函数 h，当分配给它的费用为 v 时，能得到的价值就是 h(v)
+对于 0. . .V 中的每一个整数 v，可以求得费用v 分配到 h 和 l 中的最大价值 f(v)。也即
+f(v) = max{h(k) + l(v ? k) | 0 ≤ k ≤ v}
+*/
+/*
+可以不装满：初始化时DP全设为0即可（设为INF代表未装物品的该状态不可接受）
+输出字典序最小的最优方案
+先把物品编号做 x ← N + 1 - x 的变换，在输出方案时再
+变换回来。在做完物品编号的变换后，可以按照前面经典的转移方程来求值。只是在输
+出方案时要注意，如果 F [i, v] = F [i - 1, v] 和 F [i, v] = F [i - 1][v - Ci] + Wi 都成立，
+应该按照后者来输出方案，即选择了物品 i，输出其原来的编号 N - 1 - i
+求方案数：将状态转移方程中的 max 改成 sum
+求最优方案数：初始化g为0,如果dp[v]=dp[v],g[v]+=g[v];dp[v]=dp[v-c[i]],g[v]+=g[v-c[i]]
+*/
+//第k大解
+int main()
+{
+     int T;
+     scanf("%d",&T);
+     while(T--)
+     {
+        int n,m,i,j,k,p,a[33],b[33];
+         scanf("%d%d%d",&n,&m,&k);
+         for(i=0;i<n;i++)
+             scanf("%d",&w[i]);
+         for(i=0;i<n;i++)
+             scanf("%d",&c[i]);
+         memset(dp,0,sizeof(dp));
+         for(i=0;i<n;i++)
+         {
+             for(j=m;j>=c[i];j--)
+             {
+                 for(p=1;p<=k;p++)
+                 {
+                     a[p]=dp[j-c[i]][p]+w[i]; //在dp[i]=max(dp[j],dp[j-c[i]]+w[i])中产生后续优解，小的为次优
+                     b[p]=dp[j][p];
+                 }
+                 a[p]=b[p]=-1;
+                 int x,y,z;
+                 x=y=z=1;
+                 while(z<=k&&(a[x]!=-1||b[y]!=-1))//产生分歧后找到其中最大的k的保留
+                 {
+                     if(a[x]>b[y])
+                     {
+                         dp[j][z]=a[x];
+                             x++;
+                     }
+                     else
+                     {
+                         dp[j][z]=b[y];
+                             y++;
+                     }
+                     if(dp[j][z]!=dp[j][z-1])//去掉重复了的优解
+                        z++;
+                 }
+             }
+         }
+         printf("%d\n",dp[m][k]);
+     }
+     return 0;
 }
 ///区间DP-石子归并
 #include <cstdio>
