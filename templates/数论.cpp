@@ -1,4 +1,4 @@
-//博弈 Nim积 sg函数打表
+//博弈 Nim积 sg函数打表 母函数
 //GCD 扩展GCD 中国剩余定理 快速幂 大步小步
 //组合数 排列位数 全排列 素数表 欧拉函数 质因子分解
 //矩阵 FFT Catalan 生成函数 置换 高斯消元
@@ -294,6 +294,31 @@ int main()
 }
 //Tartan定理： 如果g1(x)是G1的SG函数， g2(x)是G2的SG函数，则G1 × G2的SG函
 //数值为： g(x, y) = g1(x) xor g2(y)
+//母函数
+/*
+K对应具体问题中物品的种类数。
+v[i]表示该乘积表达式第i个因子的权重，对应于具体问题的每个物品的价值或者权重。
+n1[i]表示该乘积表达式第i个因子的起始系数，对应于具体问题中的每个物品的最少个数，即最少要取多少个。
+n2[i]表示该乘积表达式第i个因子的终止系数，对应于具体问题中的每个物品的最多个数，即最多要取多少个。
+P是可能的最大指数。如果要求15元有多少组合，那么P就是15；如果问最小的不能拼出的数值，那么P就是所有钱加起来的和。如果最大无限，则设为INF
+last是出现过的组合数中的最大值，最好设为全局变量方便之后遍历a数组
+*/
+void solve(int a[],int v[],int n1[],int n2[],int K)
+{
+    a[0]=1;
+    int last=0;
+    for (int i=0;i<K;i++)
+    {
+        int last2=min(last+n2[i]*v[i],P);
+        memset(b,0,sizeof(int)*(last2+1));
+        for (int j=n1[i];j<=n2[i]&&j*v[i]<=last2;j++)
+            for (int k=0;k<=last&&k+j*v[i]<=last2;k++)
+                b[k+j*v[i]]+=a[k];
+        memcpy(a,b,sizeof(int)*(last2+1));
+        last=last2;
+    }
+    //a[i]表示权重i的组合数，结束时a[i]=0说明i无法生成
+}
 //GCD
 LL gcd(LL a,LL b)
 {
@@ -635,41 +660,55 @@ int main()
     return 0;
 }
 //matrix
-typedef struct node
+const int N=2;
+typedef struct Matrix
 {
     LL m[N][N];
-    void Init()
+    void init()
     {
         memset(m,0,sizeof(m));
         for(int i=0; i<N; i++)
             m[i][i]=1;
     }
-} matrix;
-matrix mul(matrix a,matrix b)
+    void let(int a,int b,int c,int d){
+		m[0][0]=a,m[0][1]=b,m[1][0]=c,m[1][1]=d;
+	}
+    Matrix operator *(Matrix &tmp)
+    {
+        Matrix res;
+        for(int i=0;i<N;++i)
+            for(int j=0;j<N;++j)
+                {
+                    res.m[i][j]=0;
+                    for(int k=0;k<N;++k)
+                    {
+                        res.m[i][j]+=(m[i][k]*tmp.m[k][j])%MOD;
+                        res.m[i][j]%=MOD;
+                    }
+                }
+        return res;
+    }
+    Matrix operator -(Matrix &tmp)
+    {
+    	Matrix res;
+    	for(int i=0;i<N;++i)
+    	    for(int j=0;j<N;++j)
+    	    	res.m[i][j]=(m[i][j]-tmp.m[i][j]+MOD)%MOD;
+    	return res;
+    }
+};
+Matrix pow(Matrix a,int n)
 {
-    matrix ans;
-    for(int i=0; i<N; i++)
-        for(int j=0; j<N; j++)
-        {
-            ans.m[i][j]=0;
-            for(int k=0; k<N; k++)
-                ans.m[i][j]+=(a.m[i][k]*b.m[k][j])%MOD;
-            ans.m[i][j]%=MOD;
-        }
-    return ans;
-}
-matrix pow(matrix a,int n)
-{
-    matrix ans;
-    ans.Init();
+    Matrix res;
+    res.init();
     while(n)
     {
-        if(n%2)
-            ans=mul(ans,a);
-        n/=2;
-        a=mul(a,a);
+        if(n&1)
+            res=res*a;
+        n>>=1;
+        a=a*a;
     }
-    return ans;
+    return res;
 }
 //FFT O(nlogn)多项式乘法
 #include<iostream>
